@@ -14,7 +14,6 @@ class Settings(BaseSettings):
 
     use_fake_embeddings: bool = Field(default=False, alias="USE_FAKE_EMBEDDINGS")
     use_memory_vectorstore: bool = Field(default=False, alias="USE_MEMORY_VECTORSTORE")
-    use_mock_db: bool = Field(default=False, alias="USE_MOCK_DB")
 
     class Config:
         env_file = ".env"

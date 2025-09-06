@@ -4,9 +4,16 @@ import os
 
 USE_MOCK_DB = os.getenv("USE_MOCK_DB", "0") == "1"
 
-if settings.use_mock_db:
-	import mongomock  # type: ignore
-	_client = mongomock.MongoClient()
+if USE_MOCK_DB:
+	try:
+		import mongomock  # type: ignore
+	except Exception:  # pragma: no cover
+		mongomock = None  # type: ignore
+	if mongomock is None:
+		# fallback to real client if mongomock not available
+		_client = MongoClient(settings.mongodb_uri)
+	else:
+		_client = mongomock.MongoClient()
 else:
 	_client = MongoClient(settings.mongodb_uri)
 
