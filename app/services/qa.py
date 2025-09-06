@@ -6,6 +6,7 @@ from bson import ObjectId
 from ..db import docs_col, chunks_col, qa_col
 from .embeddings import embed_texts
 from .vectorstore import get_vectorstore
+from .llm import generate_text
 
 _vectorstore = get_vectorstore()
 
@@ -52,19 +53,41 @@ def ask_question(question: str) -> Dict[str, Any]:
             }
         )
 
-    # try to get openapi doc for snippets
-    # pick the most relevant doc_id among chunks
+    # AI-driven snippet generation
+    # Compose a minimal, grounded prompt with top contexts and any OpenAPI spec available.
     top_doc_id = chunks[0].get("doc_id")
     doc = docs_col.find_one({"_id": top_doc_id}) if top_doc_id else None
-
+    context_text = "\n\n".join((c.get("text") or "")[:800] for c in chunks[:3])
+    spec_text = doc.get("content", "") if doc and doc.get("type") == "openapi" else ""
+    system = (
+        "You generate practical API request code snippets strictly consistent with the provided OpenAPI/spec context. "
+        "Return a compact JSON object with a 'snippets' array; each item has 'language' and 'code'. "
+        "Prefer cURL and Python. Do not invent paths or parameters not present in the spec/context."
+    )
+    prompt = (
+        f"Question: {question}\n\n"
+        f"Relevant context:\n{context_text}\n\n"
+        f"OpenAPI (if any):\n{spec_text[:4000]}\n\n"
+        "Produce 2-3 minimal yet working snippets."
+    )
+    ai_out = generate_text(prompt, system=system, max_tokens=500)
     snippets: List[Dict[str, str]] = []
-    if doc and doc.get("type") == "openapi":
-        from .openapi_utils import load_openapi, generate_snippets_from_openapi
-
-        spec = load_openapi(doc.get("content", "")) or {}
-        for lang, code in generate_snippets_from_openapi(spec, question, top_k=1):
-            snippets.append({"language": lang, "code": code})
-    # ensure at least two snippets in different languages; fallback if needed
+    # parse leniently as JSON or simple heuristics
+    import json, re
+    try:
+        obj = json.loads(ai_out)
+        for it in obj.get("snippets", [])[:3]:
+            lang = str(it.get("language", "")).lower() or "text"
+            code = str(it.get("code", ""))
+            if code:
+                snippets.append({"language": lang, "code": code})
+    except Exception:
+        # fallback: extract code fences
+        fences = re.findall(r"```(\w+)?\n([\s\S]*?)```", ai_out)
+        for lang, code in fences[:3]:
+            lang = (lang or "text").lower()
+            snippets.append({"language": lang, "code": code.strip()})
+    # Ensure at least two different languages
     if len(snippets) < 2:
         snippets.extend(
             [
@@ -72,11 +95,11 @@ def ask_question(question: str) -> Dict[str, Any]:
                 {"language": "python", "code": "import requests\nprint(requests.get('https://api.example.com/ping').status_code)"},
             ]
         )
-        # dedupe by language
-        dedup = {}
-        for s in snippets:
-            dedup[s["language"]] = s
-        snippets = list(dedup.values())[:2]
+    dedup = {}
+    for s in snippets:
+        if s.get("language") and s.get("code"):
+            dedup.setdefault(s["language"], s)
+    snippets = list(dedup.values())[:3]
 
     answer = _format_answer(question, [{"text": c.get("text")} for c in chunks[:3]])
 

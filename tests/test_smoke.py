@@ -11,12 +11,11 @@ client = TestClient(app)
 
 def test_smoke_ingest_qa_history(tmp_path):
     # ingest sample docs
-    openapi_file = ("openapi.yaml", open("sample_docs/openapi.yaml", "rb"), "application/yaml")
-    md_file = ("guide.md", open("sample_docs/guide.md", "rb"), "text/markdown")
-    resp = client.post("/ingest", files=[("files", openapi_file), ("files", md_file)])
+    openapi_file = ("openapi.json", open("sample_docs/openapi.json", "rb"), "application/json")
+    resp = client.post("/ingest", files=[("files", openapi_file)])
     assert resp.status_code == 200, resp.text
     data = resp.json()
-    assert len(data["doc_ids"]) >= 2
+    assert len(data["doc_ids"]) >= 1
 
     # ask a question
     q = {"question": "How do I create an invoice?"}

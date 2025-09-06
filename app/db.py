@@ -2,7 +2,7 @@ from pymongo import MongoClient
 from .config import settings
 import os
 
-USE_MOCK_DB = os.getenv("USE_MOCK_DB", "0") == "1"
+USE_MOCK_DB = False
 
 if USE_MOCK_DB:
 	try:

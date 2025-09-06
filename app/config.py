@@ -11,10 +11,15 @@ class Settings(BaseSettings):
     pinecone_region: str = Field(default="us-east-1", alias="PINECONE_REGION")
 
     openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
+    gemini_api_key: str | None = Field(default=None, alias="GEMINI_API_KEY")
+    embeddings_provider: str | None = Field(default=None, alias="EMBEDDINGS_PROVIDER")
 
     use_fake_embeddings: bool = Field(default=False, alias="USE_FAKE_EMBEDDINGS")
     use_memory_vectorstore: bool = Field(default=False, alias="USE_MEMORY_VECTORSTORE")
 
+    # CORS
+    cors_allow_origins: str = Field(default="*", alias="CORS_ALLOW_ORIGINS")
+    use_mock_db: bool = Field(default=False, alias="USE_MOCK_DB")
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

@@ -1,0 +1,38 @@
+{
+  "openapi": "3.0.0",
+  "info": { "title": "Example Billing API", "version": "1.0.0" },
+  "paths": {
+    "/invoices": {
+      "post": {
+        "summary": "Create an invoice",
+        "description": "Create a new invoice for a customer.",
+        "operationId": "createInvoice",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "customerId": { "type": "string" },
+                  "amount": { "type": "number" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Created" } }
+      }
+    },
+    "/invoices/{id}": {
+      "get": {
+        "summary": "Get an invoice",
+        "operationId": "getInvoice",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "OK" } }
+      }
+    }
+  }
+}

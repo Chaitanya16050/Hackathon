@@ -6,6 +6,7 @@ pydantic-settings==2.5.2
 pymongo==4.10.1
 pinecone-client==5.0.1
 openai==1.47.0
+google-generativeai==0.7.2
 PyYAML==6.0.2
 markdown-it-py==3.0.0
 mdurl==0.1.2

@@ -17,7 +17,7 @@ This backend ingests a tiny set of product/API docs (OpenAPI and/or Markdown), a
 - FastAPI
 - MongoDB (pymongo)
 - Pinecone (vector DB). Fallback to in-memory vector store for local/dev without keys.
-- OpenAI embeddings by default; optional fake embeddings for offline tests
+- OpenAI embeddings by default; optional Gemini (Google) embeddings; fake embeddings for offline tests
 
 ## Quickstart
 
@@ -33,6 +33,9 @@ PINECONE_INDEX=aidenai-docs
 PINECONE_CLOUD=aws
 PINECONE_REGION=us-east-1
 OPENAI_API_KEY=your_openai_key
+# Optional Gemini support
+GEMINI_API_KEY=your_gemini_key
+EMBEDDINGS_PROVIDER=openai  # or gemini
 # For offline/local smoke tests without external services:
 USE_FAKE_EMBEDDINGS=0
 USE_MEMORY_VECTORSTORE=0
